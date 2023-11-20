@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:BluetoothDeviceScanner.Converters"
+             x:Class="BluetoothDeviceScanner.Views.MainPage"
+             Title="Bluetooth Device Scanner">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <StackLayout
+            Padding="30,0"
+            Spacing="25">
+            <Label Text="Bluetooth Device Scanner"
+               FontSize="Large"
+               HorizontalOptions="Center"
+               Margin="0,0,0,20" />
+
+            <Button Text="Start Scanning"
+                    Command="{Binding StartScanCommand}"
+                    HorizontalOptions="FillAndExpand"
+                    IsEnabled="{Binding IsScanning, Converter={StaticResource InverseBooleanConverter}}"
+                    Margin="0,0,0,10" />
+
+            <Button Text="Stop Scanning"
+                    Command="{Binding StopScanCommand}"
+                    HorizontalOptions="FillAndExpand"
+                    IsEnabled="{Binding IsScanning}"
+                    Margin="0,0,0,10" />
+
+            <Label Text="{Binding StatusMessage}"
+                FontSize="Small"
+                HorizontalOptions="Center"
+                Margin="0,0,0,10" />
+
+            <ListView x:Name="DevicesListView" 
+                    ItemsSource="{Binding Devices}"
+                    HasUnevenRows="True"
+                    SelectedItem="{Binding Path=SelectedDevice, Mode=TwoWay}">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <ViewCell>
+                            <StackLayout Padding="10">
+                                <Label Text="{Binding}"
+                                    FontSize="Medium" />
+                            </StackLayout>
+                        </ViewCell>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackLayout>
+    </ScrollView>
+
+</ContentPage>
