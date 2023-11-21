@@ -1,13 +1,16 @@
+using System;
+using System.Threading.Tasks;
 using BluetoothDeviceScanner.Models;
+using BluetoothDeviceScanner.Services;
 using Plugin.BLE;
 using Plugin.BLE.Abstractions.Contracts;
 
-namespace BluetoothDeviceScanner.Services
+namespace BluetoothDeviceScanner
 {
     public class BluetoothService : IBluetoothService
     {
         private readonly IAdapter _adapter;
-        private IDevice _connectedDevice;
+        private readonly IBluetoothLE _bluetoothLE;
 
         public event EventHandler<BluetoothDeviceModel> DeviceDiscovered;
         public event EventHandler<BluetoothDeviceModel> DeviceConnected;
@@ -15,64 +18,73 @@ namespace BluetoothDeviceScanner.Services
 
         public BluetoothService()
         {
+            _bluetoothLE = CrossBluetoothLE.Current;
             _adapter = CrossBluetoothLE.Current.Adapter;
-            _adapter.DeviceDiscovered += OnDeviceDiscovered;
-            _adapter.DeviceConnected += OnDeviceConnected;
-            _adapter.DeviceDisconnected += OnDeviceDisconnected;
+
+            _adapter.DeviceDiscovered += (s, e) =>
+            {
+                var device = new BluetoothDeviceModel(
+                    e.Device.Name,
+                    e.Device.Id.ToString(),
+                    0, // Replace with the actual value
+                    DateTime.Now // Replace with the actual value
+                );
+
+                DeviceDiscovered?.Invoke(this, device);
+            };
+
+            _adapter.DeviceConnected += (s, e) =>
+            {
+                var device = new BluetoothDeviceModel(
+                    e.Device.Name,
+                    e.Device.Id.ToString(),
+                    0, // Replace with the actual value
+                    DateTime.Now // Replace with the actual value
+                );
+
+                DeviceConnected?.Invoke(this, device);
+            };
+
+            _adapter.DeviceDisconnected += (s, e) =>
+            {
+                var device = new BluetoothDeviceModel(
+                    e.Device.Name,
+                    e.Device.Id.ToString(),
+                    0, // Replace with the actual value
+                    DateTime.Now // Replace with the actual value
+                );
+
+                DeviceDisconnected?.Invoke(this, device);
+            };
         }
 
-        // Starts scanning for Bluetooth devices
         public async Task StartScanningAsync()
         {
-            await _adapter.StartScanningForDevicesAsync();
+            if (!_adapter.IsScanning)
+            {
+                await _adapter.StartScanningForDevicesAsync();
+            }
         }
 
-        // Stops scanning for Bluetooth devices
         public async Task StopScanningAsync()
         {
-            await _adapter.StopScanningForDevicesAsync();
+            if (_adapter.IsScanning)
+            {
+                await _adapter.StopScanningForDevicesAsync();
+            }
         }
 
-        // Connects to the specified Bluetooth device
         public async Task ConnectToDeviceAsync(BluetoothDeviceModel device)
         {
-            if (_connectedDevice != null)
+            if (device != null)
             {
-                await _adapter.DisconnectDeviceAsync(_connectedDevice);
-            }
-
-            var bleDevice = await _adapter.ConnectToKnownDeviceAsync(Guid.Parse(device.Address));
-            _connectedDevice = bleDevice;
-        }
-
-        // Disconnects from the connected Bluetooth device
-        public async Task DisconnectFromDeviceAsync(BluetoothDeviceModel device)
-        {
-            if (_connectedDevice != null)
-            {
-                await _adapter.DisconnectDeviceAsync(_connectedDevice);
+                var bleDevice = await _adapter.ConnectToKnownDeviceAsync(Guid.Parse(device.Address));
             }
         }
 
-        // Event handler for when a new device is discovered
-        private void OnDeviceDiscovered(object sender, Plugin.BLE.Abstractions.EventArgs.DeviceEventArgs args)
+        public Task DisconnectFromDeviceAsync(BluetoothDeviceModel device)
         {
-            var device = new BluetoothDeviceModel(args.Device.Name, args.Device.Id.ToString(), args.Device.Rssi, DateTime.Now);
-            DeviceDiscovered?.Invoke(this, device);
-        }
-
-        // Event handler for when a device is connected
-        private void OnDeviceConnected(object sender, Plugin.BLE.Abstractions.EventArgs.DeviceEventArgs args)
-        {
-            var device = new BluetoothDeviceModel(args.Device.Name, args.Device.Id.ToString(), args.Device.Rssi, DateTime.Now);
-            DeviceConnected?.Invoke(this, device);
-        }
-
-        // Event handler for when a device is disconnected
-        private void OnDeviceDisconnected(object sender, Plugin.BLE.Abstractions.EventArgs.DeviceEventArgs args)
-        {
-            var device = new BluetoothDeviceModel(args.Device.Name, args.Device.Id.ToString(), args.Device.Rssi, DateTime.Now);
-            DeviceDisconnected?.Invoke(this, device);
+            throw new NotImplementedException();
         }
     }
 }

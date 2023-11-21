@@ -29,5 +29,26 @@ namespace BluetoothDeviceScanner.Views
             // Deselect the item after connecting.
             ((ListView)sender).SelectedItem = null;
         }
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+            await CheckPermissionsAsync();
+        }
+
+        private async Task CheckPermissionsAsync()
+        {
+            var statusBluetooth = await Permissions.CheckStatusAsync<Permissions.Bluetooth>();
+            var statusLocation = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
+
+            if (statusBluetooth != PermissionStatus.Granted)
+            {
+                await Permissions.RequestAsync<Permissions.Bluetooth>();
+            }
+
+            if (statusLocation != PermissionStatus.Granted)
+            {
+                await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+            }
+        }
     }
 }
